@@ -49,45 +49,37 @@ import uk.co.samuelwall.materialtaptargetprompt.extras.backgrounds.RectangleProm
 import uk.co.samuelwall.materialtaptargetprompt.extras.focals.RectanglePromptFocal;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener
-{
+        implements NavigationView.OnNavigationItemSelectedListener {
     private ActionMode mActionMode;
-    private ActionMode.Callback mActionModeCallback = new ActionMode.Callback()
-    {
+    private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
         @Override
-        public boolean onCreateActionMode(ActionMode mode, Menu menu)
-        {
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             MenuInflater inflater = mode.getMenuInflater();
             inflater.inflate(R.menu.actionmode, menu);
             return true;
         }
 
         @Override
-        public boolean onPrepareActionMode(ActionMode mode, Menu menu)
-        {
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
             return false;
         }
 
         @Override
-        public boolean onActionItemClicked(ActionMode mode, MenuItem item)
-        {
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             mActionMode.finish();
             return true;
         }
 
         @Override
-        public void onDestroyActionMode(ActionMode mode)
-        {
+        public void onDestroyActionMode(ActionMode mode) {
             mActionMode = null;
         }
     };
 
     MaterialTapTargetPrompt mFabPrompt;
 
-    public void showFabPrompt(View view)
-    {
-        if (mFabPrompt != null)
-        {
+    public void showFabPrompt(View view) {
+        if (mFabPrompt != null) {
             return;
         }
         SpannableStringBuilder secondaryText = new SpannableStringBuilder("Tap the envelop to start composing your first email");
@@ -101,14 +93,11 @@ public class MainActivity extends AppCompatActivity
                 .setSecondaryText(secondaryText)
                 .setBackButtonDismissEnabled(true)
                 .setAnimationInterpolator(new FastOutSlowInInterpolator())
-                .setPromptStateChangeListener(new MaterialTapTargetPrompt.PromptStateChangeListener()
-                {
+                .setPromptStateChangeListener(new MaterialTapTargetPrompt.PromptStateChangeListener() {
                     @Override
-                    public void onPromptStateChanged(@NonNull MaterialTapTargetPrompt prompt, int state)
-                    {
+                    public void onPromptStateChanged(@NonNull MaterialTapTargetPrompt prompt, int state) {
                         if (state == MaterialTapTargetPrompt.STATE_FOCAL_PRESSED
-                                || state == MaterialTapTargetPrompt.STATE_NON_FOCAL_PRESSED)
-                        {
+                                || state == MaterialTapTargetPrompt.STATE_NON_FOCAL_PRESSED) {
                             mFabPrompt = null;
                             //Do something such as storing a value so that this prompt is never shown again
                         }
@@ -118,33 +107,28 @@ public class MainActivity extends AppCompatActivity
         mFabPrompt.show();
     }
 
-    public void showFabPromptFor(View view)
-    {
+    public void showFabPromptFor(View view) {
         new MaterialTapTargetPrompt.Builder(MainActivity.this)
                 .setTarget(findViewById(R.id.fab))
                 .setFocalPadding(R.dimen.dp40)
                 .setPrimaryText("showFor(7000)")
                 .setSecondaryText("This prompt will show for 7 seconds")
                 .setAnimationInterpolator(new FastOutSlowInInterpolator())
-                .setPromptStateChangeListener(new MaterialTapTargetPrompt.PromptStateChangeListener()
-                {
+                .setPromptStateChangeListener(new MaterialTapTargetPrompt.PromptStateChangeListener() {
                     @Override
-                    public void onPromptStateChanged(@NonNull MaterialTapTargetPrompt prompt, int state)
-                    {
-                        if (state == MaterialTapTargetPrompt.STATE_SHOW_FOR_TIMEOUT)
-                        {
+                    public void onPromptStateChanged(@NonNull MaterialTapTargetPrompt prompt, int state) {
+                        if (state == MaterialTapTargetPrompt.STATE_SHOW_FOR_TIMEOUT) {
 
                             Toast.makeText(MainActivity.this,
-                                "Prompt timedout after 7 seconds", Toast.LENGTH_SHORT)
-                                .show();
+                                    "Prompt timedout after 7 seconds", Toast.LENGTH_SHORT)
+                                    .show();
                         }
                     }
                 })
                 .showFor(7000);
     }
 
-    public void showNavPrompt(View view)
-    {
+    public void showNavPrompt(View view) {
         new MaterialTapTargetPrompt.Builder(this)
                 .setTarget(R.id.navfab)
                 .setPrimaryText(R.string.example_fab_title)
@@ -154,8 +138,7 @@ public class MainActivity extends AppCompatActivity
                 .show();
     }
 
-    public void showSideNavigationPrompt(View view)
-    {
+    public void showSideNavigationPrompt(View view) {
         final MaterialTapTargetPrompt.Builder tapTargetPromptBuilder = new MaterialTapTargetPrompt.Builder(this)
                 .setPrimaryText(R.string.menu_prompt_title)
                 .setSecondaryText(R.string.menu_prompt_description)
@@ -166,13 +149,10 @@ public class MainActivity extends AppCompatActivity
         final Toolbar tb = this.findViewById(R.id.toolbar);
         tapTargetPromptBuilder.setTarget(tb.getChildAt(1));
 
-        tapTargetPromptBuilder.setPromptStateChangeListener(new MaterialTapTargetPrompt.PromptStateChangeListener()
-        {
+        tapTargetPromptBuilder.setPromptStateChangeListener(new MaterialTapTargetPrompt.PromptStateChangeListener() {
             @Override
-            public void onPromptStateChanged(@NonNull MaterialTapTargetPrompt prompt, int state)
-            {
-                if (state == MaterialTapTargetPrompt.STATE_FOCAL_PRESSED)
-                {
+            public void onPromptStateChanged(@NonNull MaterialTapTargetPrompt prompt, int state) {
+                if (state == MaterialTapTargetPrompt.STATE_FOCAL_PRESSED) {
                     //Do something such as storing a value so that this prompt is never shown again
                 }
             }
@@ -180,8 +160,7 @@ public class MainActivity extends AppCompatActivity
         tapTargetPromptBuilder.show();
     }
 
-    public void showOverflowPrompt(View view)
-    {
+    public void showOverflowPrompt(View view) {
         final MaterialTapTargetPrompt.Builder tapTargetPromptBuilder = new MaterialTapTargetPrompt.Builder(this)
                 .setPrimaryText(R.string.overflow_prompt_title)
                 .setSecondaryText(R.string.overflow_prompt_description)
@@ -190,20 +169,16 @@ public class MainActivity extends AppCompatActivity
                 .setIcon(R.drawable.ic_more_vert);
         final Toolbar tb = this.findViewById(R.id.toolbar);
         final View child = tb.getChildAt(2);
-        if (child instanceof ActionMenuView)
-        {
+        if (child instanceof ActionMenuView) {
             final ActionMenuView actionMenuView = ((ActionMenuView) child);
             tapTargetPromptBuilder.setTarget(actionMenuView.getChildAt(actionMenuView.getChildCount() - 1));
-        }
-        else
-        {
+        } else {
             Toast.makeText(this, R.string.overflow_unavailable, Toast.LENGTH_SHORT);
         }
         tapTargetPromptBuilder.show();
     }
 
-    public void showSearchPrompt(View view)
-    {
+    public void showSearchPrompt(View view) {
         new MaterialTapTargetPrompt.Builder(this)
                 .setPrimaryText(R.string.search_prompt_title)
                 .setSecondaryText(R.string.search_prompt_description)
@@ -214,8 +189,7 @@ public class MainActivity extends AppCompatActivity
                 .show();
     }
 
-    public void showBottomSheetDialogPrompt(View view)
-    {
+    public void showBottomSheetDialogPrompt(View view) {
         final BottomSheetDialogFragmentExample bottomSheetDialogFragmentExample =
                 new BottomSheetDialogFragmentExample();
 
@@ -223,26 +197,21 @@ public class MainActivity extends AppCompatActivity
                 bottomSheetDialogFragmentExample.getTag());
     }
 
-    public void showStylePrompt(View view)
-    {
+    public void showStylePrompt(View view) {
         final MaterialTapTargetPrompt.Builder builder = new MaterialTapTargetPrompt.Builder(this, R.style.MaterialTapTargetPromptTheme_FabTarget);
         final Toolbar tb = this.findViewById(R.id.toolbar);
         final View child = tb.getChildAt(2);
-        if (child instanceof ActionMenuView)
-        {
+        if (child instanceof ActionMenuView) {
             final ActionMenuView actionMenuView = ((ActionMenuView) child);
             builder.setTarget(actionMenuView.getChildAt(actionMenuView.getChildCount() - 1));
-        }
-        else
-        {
+        } else {
             Toast.makeText(this, R.string.overflow_unavailable, Toast.LENGTH_SHORT);
         }
         builder.setIcon(R.drawable.ic_more_vert)
                 .show();
     }
 
-    public void showRectPrompt(View view)
-    {
+    public void showRectPrompt(View view) {
         new MaterialTapTargetPrompt.Builder(this)
                 .setTarget(view)
                 .setPrimaryText("Different shapes")
@@ -252,8 +221,7 @@ public class MainActivity extends AppCompatActivity
                 .show();
     }
 
-    public void showFullscreenRectPrompt(View view)
-    {
+    public void showFullscreenRectPrompt(View view) {
         new MaterialTapTargetPrompt.Builder(this)
                 .setTarget(view)
                 .setPrimaryText("Different shapes")
@@ -263,13 +231,11 @@ public class MainActivity extends AppCompatActivity
                 .show();
     }
 
-    public void showDialog(View view)
-    {
+    public void showDialog(View view) {
         startActivity(new Intent(this, DialogStyleActivity.class));
     }
 
-    public void showActionModePrompt(View view)
-    {
+    public void showActionModePrompt(View view) {
         mActionMode = this.startSupportActionMode(mActionModeCallback);
         new MaterialTapTargetPrompt.Builder(MainActivity.this)
                 .setPrimaryText(R.string.action_mode_prompt_title)
@@ -282,19 +248,16 @@ public class MainActivity extends AppCompatActivity
                 .show();
     }
 
-    public void showActivity(View view)
-    {
+    public void showActivity(View view) {
         startActivity(new Intent(this, EmptyActivity.class));
     }
 
 
-    public void showCentreActivity(View view)
-    {
+    public void showCentreActivity(View view) {
         startActivity(new Intent(this, CentrePositionActivity.class));
     }
 
-    public void showCardsActivity(View view)
-    {
+    public void showCardsActivity(View view) {
         startActivity(new Intent(this, CardActivity.class));
     }
 
@@ -304,32 +267,29 @@ public class MainActivity extends AppCompatActivity
 
 
         sequence.addPrompt(new MaterialTapTargetPrompt.Builder(MainActivity.this)
-            .setTarget(findViewById(R.id.fab))
-            .setPrimaryText("Step 1")
-            .setFocalPadding(R.dimen.dp40)
-            .create());
+                .setTarget(findViewById(R.id.fab))
+                .setPrimaryText("Step 1")
+                .setFocalPadding(R.dimen.dp40)
+                .create());
 
         sequence.addPrompt(new MaterialTapTargetPrompt.Builder(MainActivity.this)
-            .setTarget(findViewById(R.id.action_search))
-            .setPrimaryText("Step 2")
-            .setAnimationInterpolator(new LinearOutSlowInInterpolator())
-            .setFocalPadding(R.dimen.dp40)
-            .setIcon(R.drawable.ic_search)
-            .create());
+                .setTarget(findViewById(R.id.action_search))
+                .setPrimaryText("Step 2")
+                .setAnimationInterpolator(new LinearOutSlowInInterpolator())
+                .setFocalPadding(R.dimen.dp40)
+                .setIcon(R.drawable.ic_search)
+                .create());
 
         sequence.show();
     }
 
 
-    public void showListActivity(View view)
-    {
+    public void showListActivity(View view) {
         startActivity(new Intent(this, ListActivity.class));
     }
 
-    public void showNoAutoDismiss(View view)
-    {
-        if (mFabPrompt != null)
-        {
+    public void showNoAutoDismiss(View view) {
+        if (mFabPrompt != null) {
             return;
         }
         mFabPrompt = new MaterialTapTargetPrompt.Builder(MainActivity.this)
@@ -340,18 +300,13 @@ public class MainActivity extends AppCompatActivity
                 .setAutoDismiss(false)
                 .setAutoFinish(false)
                 .setCaptureTouchEventOutsidePrompt(true)
-                .setPromptStateChangeListener(new MaterialTapTargetPrompt.PromptStateChangeListener()
-                {
+                .setPromptStateChangeListener(new MaterialTapTargetPrompt.PromptStateChangeListener() {
                     @Override
-                    public void onPromptStateChanged(@NonNull MaterialTapTargetPrompt prompt, int state)
-                    {
-                        if (state == MaterialTapTargetPrompt.STATE_FOCAL_PRESSED)
-                        {
+                    public void onPromptStateChanged(@NonNull MaterialTapTargetPrompt prompt, int state) {
+                        if (state == MaterialTapTargetPrompt.STATE_FOCAL_PRESSED) {
                             prompt.finish();
                             mFabPrompt = null;
-                        }
-                        else if (state == MaterialTapTargetPrompt.STATE_NON_FOCAL_PRESSED)
-                        {
+                        } else if (state == MaterialTapTargetPrompt.STATE_NON_FOCAL_PRESSED) {
                             mFabPrompt = null;
                         }
                     }
@@ -360,21 +315,17 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         final Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener()
-        {
+        fab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view)
-            {
-                if (mFabPrompt != null)
-                {
+            public void onClick(View view) {
+                if (mFabPrompt != null) {
                     mFabPrompt.finish();
                     mFabPrompt = null;
                 }
@@ -394,38 +345,31 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onBackPressed()
-    {
+    public void onBackPressed() {
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START))
-        {
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        }
-        else
-        {
+        } else {
             super.onBackPressed();
         }
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
+    public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item)
-    {
+    public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings)
-        {
+        if (id == R.id.action_settings) {
             return true;
         }
 
@@ -434,8 +378,7 @@ public class MainActivity extends AppCompatActivity
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item)
-    {
+    public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);

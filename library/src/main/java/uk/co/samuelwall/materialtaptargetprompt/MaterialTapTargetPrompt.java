@@ -39,6 +39,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.Button;
 
 import uk.co.samuelwall.materialtaptargetprompt.extras.PromptOptions;
 
@@ -52,8 +53,7 @@ import uk.co.samuelwall.materialtaptargetprompt.extras.PromptOptions;
  * Material Design guidelines.</p>
  * </div>
  */
-public class MaterialTapTargetPrompt
-{
+public class MaterialTapTargetPrompt {
 
     /**
      * Prompt has yet to be shown.
@@ -114,17 +114,20 @@ public class MaterialTapTargetPrompt
     /**
      * Used to calculate the animation progress for the reveal and dismiss animations.
      */
-    @Nullable ValueAnimator mAnimationCurrent;
+    @Nullable
+    ValueAnimator mAnimationCurrent;
 
     /**
      * Used to calculate the animation progress for the idle breathing focal animation.
      */
-    @Nullable ValueAnimator mAnimationFocalBreathing;
+    @Nullable
+    ValueAnimator mAnimationFocalBreathing;
 
     /**
      * Used to calculate the animation progress for the idle white flash animation.
      */
-    @Nullable ValueAnimator mAnimationFocalRipple;
+    @Nullable
+    ValueAnimator mAnimationFocalRipple;
 
     /**
      * The last percentage progress for idle animation.
@@ -141,16 +144,14 @@ public class MaterialTapTargetPrompt
     /**
      * The system status bar height.
      */
-    final float mStatusBarHeight;
+    private final float mStatusBarHeight;
 
     /**
      * Task used for triggering the prompt timeout.
      */
-    final Runnable mTimeoutRunnable = new Runnable()
-    {
+    final Runnable mTimeoutRunnable = new Runnable() {
         @Override
-        public void run()
-        {
+        public void run() {
             // Emit the state change and dismiss the prompt
             onPromptStateChanged(STATE_SHOW_FOR_TIMEOUT);
             dismiss();
@@ -160,42 +161,35 @@ public class MaterialTapTargetPrompt
     /**
      * Listener for the view layout changing.
      */
-    @Nullable final ViewTreeObserver.OnGlobalLayoutListener mGlobalLayoutListener;
+    @Nullable
+    final ViewTreeObserver.OnGlobalLayoutListener mGlobalLayoutListener;
 
     /**
      * Default constructor.
      *
      * @param promptOptions The options used to create the prompt.
      */
-    MaterialTapTargetPrompt(final PromptOptions promptOptions)
-    {
+    private MaterialTapTargetPrompt(final PromptOptions promptOptions) {
         final ResourceFinder resourceFinder = promptOptions.getResourceFinder();
         mView = new PromptView(resourceFinder.getContext());
         mView.mPrompt = this;
         mView.mPromptOptions = promptOptions;
-        mView.mPromptTouchedListener = new PromptView.PromptTouchedListener()
-        {
+        mView.mPromptTouchedListener = new PromptView.PromptTouchedListener() {
             @Override
-            public void onFocalPressed()
-            {
-                if (!isDismissing())
-                {
+            public void onFocalPressed() {
+                if (!isDismissing()) {
                     onPromptStateChanged(STATE_FOCAL_PRESSED);
-                    if (mView.mPromptOptions.getAutoFinish())
-                    {
+                    if (mView.mPromptOptions.getAutoFinish()) {
                         finish();
                     }
                 }
             }
 
             @Override
-            public void onNonFocalPressed()
-            {
-                if (!isDismissing())
-                {
+            public void onNonFocalPressed() {
+                if (!isDismissing()) {
                     onPromptStateChanged(STATE_NON_FOCAL_PRESSED);
-                    if (mView.mPromptOptions.getAutoDismiss())
-                    {
+                    if (mView.mPromptOptions.getAutoDismiss()) {
                         dismiss();
                     }
                 }
@@ -206,33 +200,25 @@ public class MaterialTapTargetPrompt
         resourceFinder.getPromptParentView().getWindowVisibleDisplayFrame(rect);
         mStatusBarHeight = rect.top;
 
-        mGlobalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener()
-        {
+        mGlobalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
-            public void onGlobalLayout()
-            {
+            public void onGlobalLayout() {
                 final View targetView = mView.mPromptOptions.getTargetView();
-                if (targetView != null)
-                {
+                if (targetView != null) {
                     final boolean isTargetAttachedToWindow;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-                    {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                         isTargetAttachedToWindow = targetView.isAttachedToWindow();
-                    }
-                    else
-                    {
+                    } else {
                         isTargetAttachedToWindow = targetView.getWindowToken() != null;
                     }
 
-                    if (!isTargetAttachedToWindow)
-                    {
+                    if (!isTargetAttachedToWindow) {
                         return;
                     }
                 }
                 prepare();
 
-                if (mAnimationCurrent == null)
-                {
+                if (mAnimationCurrent == null) {
                     // Force a relayout to update the view's location
                     updateAnimation(1, 1);
                 }
@@ -243,22 +229,23 @@ public class MaterialTapTargetPrompt
     /**
      * Displays the prompt.
      */
-    public void show()
-    {
-        if (isStarting())
-        {
+    public void show() {
+        if (isStarting()) {
             return;
         }
 
         final ViewGroup parent = mView.mPromptOptions.getResourceFinder().getPromptParentView();
 
         // If dismissing or the prompt already exists in the parent view
-        if (isDismissing() || parent.findViewById(R.id.material_target_prompt_view) != null)
-        {
+        if (isDismissing() || parent.findViewById(R.id.material_target_prompt_view) != null) {
             cleanUpPrompt(mState);
         }
 
         parent.addView(mView);
+        Button skipButton = mView.mPromptOptions.getSkipButton(mView.getContext());
+        if (skipButton != null) {
+            parent.addView(skipButton);
+        }
         addGlobalLayoutListener();
         onPromptStateChanged(STATE_REVEALING);
         prepare();
@@ -270,8 +257,7 @@ public class MaterialTapTargetPrompt
      *
      * @param millis The number of milliseconds to show the prompt for.
      */
-    public void showFor(long millis)
-    {
+    public void showFor(long millis) {
         mView.postDelayed(mTimeoutRunnable, millis);
         show();
     }
@@ -279,8 +265,7 @@ public class MaterialTapTargetPrompt
     /**
      * Cancel the show for timer if it has been created.
      */
-    public void cancelShowForTimer()
-    {
+    public void cancelShowForTimer() {
         mView.removeCallbacks(mTimeoutRunnable);
     }
 
@@ -297,8 +282,7 @@ public class MaterialTapTargetPrompt
      * @see #STATE_DISMISSING
      * @see #STATE_DISMISSED
      */
-    public int getState()
-    {
+    public int getState() {
         return mState;
     }
 
@@ -307,8 +291,7 @@ public class MaterialTapTargetPrompt
      *
      * @return True if revealing or revealed.
      */
-    boolean isStarting()
-    {
+    boolean isStarting() {
         return mState == STATE_REVEALING || mState == STATE_REVEALED;
     }
 
@@ -317,8 +300,7 @@ public class MaterialTapTargetPrompt
      *
      * @return True if dismissing or finishing.
      */
-    boolean isDismissing()
-    {
+    boolean isDismissing() {
         return mState == STATE_DISMISSING || mState == STATE_FINISHING;
     }
 
@@ -327,8 +309,7 @@ public class MaterialTapTargetPrompt
      *
      * @return True if dismissed or finished.
      */
-    boolean isDismissed()
-    {
+    boolean isDismissed() {
         return mState == STATE_DISMISSED || mState == STATE_FINISHED;
     }
 
@@ -337,19 +318,16 @@ public class MaterialTapTargetPrompt
      *
      * @return True if not revealed or revealing.
      */
-    boolean isComplete()
-    {
+    boolean isComplete() {
         return mState == STATE_NOT_SHOWN || isDismissing() || isDismissed();
     }
 
     /**
      * Adds layout listener to view parent to capture layout changes.
      */
-    void addGlobalLayoutListener()
-    {
+    private void addGlobalLayoutListener() {
         final ViewTreeObserver viewTreeObserver = mView.mPromptOptions.getResourceFinder().getPromptParentView().getViewTreeObserver();
-        if (viewTreeObserver.isAlive())
-        {
+        if (viewTreeObserver.isAlive()) {
             viewTreeObserver.addOnGlobalLayoutListener(mGlobalLayoutListener);
         }
     }
@@ -357,17 +335,12 @@ public class MaterialTapTargetPrompt
     /**
      * Removes global layout listener added in {@link #addGlobalLayoutListener()}.
      */
-    void removeGlobalLayoutListener()
-    {
+    private void removeGlobalLayoutListener() {
         final ViewTreeObserver viewTreeObserver = mView.mPromptOptions.getResourceFinder().getPromptParentView().getViewTreeObserver();
-        if (viewTreeObserver.isAlive())
-        {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
-            {
+        if (viewTreeObserver.isAlive()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 viewTreeObserver.removeOnGlobalLayoutListener(mGlobalLayoutListener);
-            }
-            else
-            {
+            } else {
                 //noinspection deprecation
                 viewTreeObserver.removeGlobalOnLayoutListener(mGlobalLayoutListener);
             }
@@ -379,10 +352,8 @@ public class MaterialTapTargetPrompt
      * <p>
      * This is treated as if the user has touched the target focal point.
      */
-    public void finish()
-    {
-        if (isComplete())
-        {
+    public void finish() {
+        if (isComplete()) {
             return;
         }
         cancelShowForTimer();
@@ -390,20 +361,16 @@ public class MaterialTapTargetPrompt
         mAnimationCurrent = ValueAnimator.ofFloat(1f, 0f);
         mAnimationCurrent.setDuration(225);
         mAnimationCurrent.setInterpolator(mView.mPromptOptions.getAnimationInterpolator());
-        mAnimationCurrent.addUpdateListener(new ValueAnimator.AnimatorUpdateListener()
-        {
+        mAnimationCurrent.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
-            public void onAnimationUpdate(@NonNull ValueAnimator animation)
-            {
+            public void onAnimationUpdate(@NonNull ValueAnimator animation) {
                 final float value = (float) animation.getAnimatedValue();
                 updateAnimation(1f + ((1f - value) / 4), value);
             }
         });
-        mAnimationCurrent.addListener(new AnimatorListener()
-        {
+        mAnimationCurrent.addListener(new AnimatorListener() {
             @Override
-            public void onAnimationEnd(Animator animation)
-            {
+            public void onAnimationEnd(Animator animation) {
                 cleanUpPrompt(STATE_FINISHED);
             }
         });
@@ -416,10 +383,8 @@ public class MaterialTapTargetPrompt
      * <p>
      * This is treated as if the user has touched outside the target focal point.
      */
-    public void dismiss()
-    {
-        if (isComplete())
-        {
+    public void dismiss() {
+        if (isComplete()) {
             return;
         }
         cancelShowForTimer();
@@ -427,20 +392,16 @@ public class MaterialTapTargetPrompt
         mAnimationCurrent = ValueAnimator.ofFloat(1f, 0f);
         mAnimationCurrent.setDuration(225);
         mAnimationCurrent.setInterpolator(mView.mPromptOptions.getAnimationInterpolator());
-        mAnimationCurrent.addUpdateListener(new ValueAnimator.AnimatorUpdateListener()
-        {
+        mAnimationCurrent.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
-            public void onAnimationUpdate(@NonNull ValueAnimator animation)
-            {
+            public void onAnimationUpdate(@NonNull ValueAnimator animation) {
                 final float value = (float) animation.getAnimatedValue();
                 updateAnimation(value, value);
             }
         });
-        mAnimationCurrent.addListener(new AnimatorListener()
-        {
+        mAnimationCurrent.addListener(new AnimatorListener() {
             @Override
-            public void onAnimationEnd(Animator animation)
-            {
+            public void onAnimationEnd(Animator animation) {
                 cleanUpPrompt(STATE_DISMISSED);
             }
         });
@@ -451,13 +412,15 @@ public class MaterialTapTargetPrompt
     /**
      * Removes the prompt from view and triggers the {@link #onPromptStateChanged(int)} event.
      */
-    void cleanUpPrompt(final int state)
-    {
+    private void cleanUpPrompt(final int state) {
         cleanUpAnimation();
         removeGlobalLayoutListener();
         mView.mPromptOptions.getResourceFinder().getPromptParentView().removeView(mView);
-        if (isDismissing())
-        {
+        Button skipButton = mView.mPromptOptions.getSkipButton(mView.getContext());
+        if (skipButton != null) {
+            mView.mPromptOptions.getResourceFinder().getPromptParentView().removeView(skipButton);
+        }
+        if (isDismissing()) {
             onPromptStateChanged(state);
         }
     }
@@ -465,23 +428,19 @@ public class MaterialTapTargetPrompt
     /**
      * Stops any current animation and removes references to it.
      */
-    void cleanUpAnimation()
-    {
-        if (mAnimationCurrent != null)
-        {
+    void cleanUpAnimation() {
+        if (mAnimationCurrent != null) {
             mAnimationCurrent.removeAllUpdateListeners();
             mAnimationCurrent.removeAllListeners();
             mAnimationCurrent.cancel();
             mAnimationCurrent = null;
         }
-        if (mAnimationFocalRipple != null)
-        {
+        if (mAnimationFocalRipple != null) {
             mAnimationFocalRipple.removeAllUpdateListeners();
             mAnimationFocalRipple.cancel();
             mAnimationFocalRipple = null;
         }
-        if (mAnimationFocalBreathing != null)
-        {
+        if (mAnimationFocalBreathing != null) {
             mAnimationFocalBreathing.removeAllUpdateListeners();
             mAnimationFocalBreathing.cancel();
             mAnimationFocalBreathing = null;
@@ -491,32 +450,26 @@ public class MaterialTapTargetPrompt
     /**
      * Starts the animation to reveal the prompt.
      */
-    void startRevealAnimation()
-    {
+    void startRevealAnimation() {
         updateAnimation(0, 0);
         cleanUpAnimation();
         mAnimationCurrent = ValueAnimator.ofFloat(0f, 1f);
         mAnimationCurrent.setInterpolator(mView.mPromptOptions.getAnimationInterpolator());
         mAnimationCurrent.setDuration(225);
-        mAnimationCurrent.addUpdateListener(new ValueAnimator.AnimatorUpdateListener()
-        {
+        mAnimationCurrent.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
-            public void onAnimationUpdate(@NonNull ValueAnimator animation)
-            {
+            public void onAnimationUpdate(@NonNull ValueAnimator animation) {
                 final float value = (float) animation.getAnimatedValue();
                 updateAnimation(value, value);
             }
         });
-        mAnimationCurrent.addListener(new AnimatorListener()
-        {
+        mAnimationCurrent.addListener(new AnimatorListener() {
             @Override
-            public void onAnimationEnd(@NonNull Animator animation)
-            {
+            public void onAnimationEnd(@NonNull Animator animation) {
                 animation.removeAllListeners();
                 updateAnimation(1, 1);
                 cleanUpAnimation();
-                if (mView.mPromptOptions.getIdleAnimationEnabled())
-                {
+                if (mView.mPromptOptions.getIdleAnimationEnabled()) {
                     startIdleAnimations();
                 }
                 onPromptStateChanged(STATE_REVEALED);
@@ -528,33 +481,26 @@ public class MaterialTapTargetPrompt
     /**
      * Starts the prompt idle animations.
      */
-    void startIdleAnimations()
-    {
+    private void startIdleAnimations() {
         cleanUpAnimation();
         mAnimationFocalBreathing = ValueAnimator.ofFloat(1, 1.1f, 1);
         mAnimationFocalBreathing.setInterpolator(mView.mPromptOptions.getAnimationInterpolator());
         mAnimationFocalBreathing.setDuration(1000);
         mAnimationFocalBreathing.setStartDelay(225);
         mAnimationFocalBreathing.setRepeatCount(ValueAnimator.INFINITE);
-        mAnimationFocalBreathing.addUpdateListener(new ValueAnimator.AnimatorUpdateListener()
-        {
+        mAnimationFocalBreathing.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             boolean direction = true;
 
             @Override
-            public void onAnimationUpdate(@NonNull ValueAnimator animation)
-            {
+            public void onAnimationUpdate(@NonNull ValueAnimator animation) {
                 final float newFocalFraction = (Float) animation.getAnimatedValue();
                 boolean newDirection = direction;
-                if (newFocalFraction < mFocalRippleProgress && direction)
-                {
+                if (newFocalFraction < mFocalRippleProgress && direction) {
                     newDirection = false;
-                }
-                else if (newFocalFraction > mFocalRippleProgress && !direction)
-                {
+                } else if (newFocalFraction > mFocalRippleProgress && !direction) {
                     newDirection = true;
                 }
-                if (newDirection != direction && !newDirection)
-                {
+                if (newDirection != direction && !newDirection) {
                     mAnimationFocalRipple.start();
                 }
                 direction = newDirection;
@@ -568,11 +514,9 @@ public class MaterialTapTargetPrompt
         mAnimationFocalRipple = ValueAnimator.ofFloat(1.1f, 1.6f);
         mAnimationFocalRipple.setInterpolator(mView.mPromptOptions.getAnimationInterpolator());
         mAnimationFocalRipple.setDuration(500);
-        mAnimationFocalRipple.addUpdateListener(new ValueAnimator.AnimatorUpdateListener()
-        {
+        mAnimationFocalRipple.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
-            public void onAnimationUpdate(@NonNull ValueAnimator animation)
-            {
+            public void onAnimationUpdate(@NonNull ValueAnimator animation) {
                 final float value = (float) animation.getAnimatedValue();
                 mView.mPromptOptions.getPromptFocal().updateRipple(value, (1.6f - value) * 2);
             }
@@ -585,11 +529,9 @@ public class MaterialTapTargetPrompt
      * @param revealModifier The amount to modify the reveal size, between 0 and 1.
      * @param alphaModifier  The amount to modify the alpha value, between 0 and 1.
      */
-    void updateAnimation(final float revealModifier, final float alphaModifier)
-    {
+    private void updateAnimation(final float revealModifier, final float alphaModifier) {
         mView.mPromptOptions.getPromptText().update(mView.mPromptOptions, revealModifier, alphaModifier);
-        if (mView.mIconDrawable != null)
-        {
+        if (mView.mIconDrawable != null) {
             mView.mIconDrawable.setAlpha((int) (255f * alphaModifier));
         }
         mView.mPromptOptions.getPromptFocal().update(mView.mPromptOptions, revealModifier, alphaModifier);
@@ -600,27 +542,20 @@ public class MaterialTapTargetPrompt
     /**
      * Update the focal and text positioning.
      */
-    void prepare()
-    {
+    void prepare() {
         final View targetRenderView = mView.mPromptOptions.getTargetRenderView();
-        if (targetRenderView == null)
-        {
+        if (targetRenderView == null) {
             mView.mTargetRenderView = mView.mPromptOptions.getTargetView();
-        }
-        else
-        {
+        } else {
             mView.mTargetRenderView = targetRenderView;
         }
         updateClipBounds();
         final View targetView = mView.mPromptOptions.getTargetView();
-        if (targetView != null)
-        {
+        if (targetView != null) {
             final int[] viewPosition = new int[2];
             mView.getLocationInWindow(viewPosition);
             mView.mPromptOptions.getPromptFocal().prepare(mView.mPromptOptions, targetView, viewPosition);
-        }
-        else
-        {
+        } else {
             final PointF targetPosition = mView.mPromptOptions.getTargetPosition();
             mView.mPromptOptions.getPromptFocal().prepare(mView.mPromptOptions, targetPosition.x, targetPosition.y);
         }
@@ -632,19 +567,15 @@ public class MaterialTapTargetPrompt
     /**
      * Update the icon drawable position or target render view position.
      */
-    void updateIconPosition()
-    {
+    private void updateIconPosition() {
         mView.mIconDrawable = mView.mPromptOptions.getIconDrawable();
-        if (mView.mIconDrawable != null)
-        {
+        if (mView.mIconDrawable != null) {
             final RectF mFocalBounds = mView.mPromptOptions.getPromptFocal().getBounds();
             mView.mIconDrawableLeft = mFocalBounds.centerX()
                     - (mView.mIconDrawable.getIntrinsicWidth() / 2);
             mView.mIconDrawableTop = mFocalBounds.centerY()
                     - (mView.mIconDrawable.getIntrinsicHeight() / 2);
-        }
-        else if (mView.mTargetRenderView != null)
-        {
+        } else if (mView.mTargetRenderView != null) {
             final int[] viewPosition = new int[2];
             mView.getLocationInWindow(viewPosition);
             final int[] targetPosition = new int[2];
@@ -658,11 +589,9 @@ public class MaterialTapTargetPrompt
     /**
      * Update the bounds that the prompt is clip to.
      */
-    void updateClipBounds()
-    {
+    void updateClipBounds() {
         final View clipToView = mView.mPromptOptions.getClipToView();
-        if (clipToView != null)
-        {
+        if (clipToView != null) {
             mView.mClipToBounds = true;
 
             //Reset the top to 0
@@ -672,16 +601,12 @@ public class MaterialTapTargetPrompt
             final Point offset = new Point();
             clipToView.getGlobalVisibleRect(mView.mClipBounds, offset);
 
-            if (offset.y == 0)
-            {
+            if (offset.y == 0) {
                 mView.mClipBounds.top += mStatusBarHeight;
             }
-        }
-        else
-        {
+        } else {
             final View contentView = mView.mPromptOptions.getResourceFinder().findViewById(android.R.id.content);
-            if (contentView != null)
-            {
+            if (contentView != null) {
                 contentView.getGlobalVisibleRect(mView.mClipBounds, new Point());
             }
             mView.mClipToBounds = false;
@@ -693,8 +618,7 @@ public class MaterialTapTargetPrompt
      *
      * @param state The state that the prompt is now in.
      */
-    protected void onPromptStateChanged(final int state)
-    {
+    protected void onPromptStateChanged(final int state) {
         mState = state;
         mView.mPromptOptions.onPromptStateChanged(this, state);
         mView.mPromptOptions.onExtraPromptStateChanged(this, state);
@@ -707,16 +631,14 @@ public class MaterialTapTargetPrompt
      * @return The created prompt.
      */
     @NonNull
-    public static MaterialTapTargetPrompt createDefault(@NonNull final PromptOptions promptOptions)
-    {
+    public static MaterialTapTargetPrompt createDefault(@NonNull final PromptOptions promptOptions) {
         return new MaterialTapTargetPrompt(promptOptions);
     }
 
     /**
      * View used to render the tap target.
      */
-    static class PromptView extends View
-    {
+    static class PromptView extends View {
         /*int padding;
         Paint paddingPaint = new Paint();
         Paint itemPaint = new Paint();*/
@@ -735,15 +657,13 @@ public class MaterialTapTargetPrompt
          *
          * @param context The context that the view is created in.
          */
-        public PromptView(final Context context)
-        {
+        public PromptView(final Context context) {
             super(context);
             setId(R.id.material_target_prompt_view);
             setFocusableInTouchMode(true);
             requestFocus();
             // Hardware acceleration for clipping to a path is not supported on SDK < 18
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2)
-            {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 // Disable hardware acceleration
                 setLayerType(View.LAYER_TYPE_SOFTWARE, null);
             }
@@ -754,25 +674,21 @@ public class MaterialTapTargetPrompt
         }
 
         @Override
-        public void onDraw(final Canvas canvas)
-        {
-            if (mClipToBounds)
-            {
+        public void onDraw(final Canvas canvas) {
+            if (mClipToBounds) {
                 canvas.clipRect(mClipBounds);
             }
 
             //Draw the backgrounds, clipping the focal path so we don't draw over it.
             final Path focalPath = mPromptOptions.getPromptFocal().getPath();
-            if (focalPath != null)
-            {
+            if (focalPath != null) {
                 canvas.save();
                 canvas.clipPath(focalPath, Region.Op.DIFFERENCE);
             }
 
             mPromptOptions.getPromptBackground().draw(canvas);
 
-            if (focalPath != null)
-            {
+            if (focalPath != null) {
                 canvas.restore();
             }
 
@@ -784,14 +700,11 @@ public class MaterialTapTargetPrompt
             canvas.drawRect(mTextBounds.right, mPrimaryTextTop, mTextBounds.right + padding, mPrimaryTextTop + mSecondaryTextOffsetTop + mSecondaryTextLayout.getHeight(), paddingPaint);*/
 
             //Draw the icon
-            if (mIconDrawable != null)
-            {
+            if (mIconDrawable != null) {
                 canvas.translate(mIconDrawableLeft, mIconDrawableTop);
                 mIconDrawable.draw(canvas);
                 canvas.translate(-mIconDrawableLeft, -mIconDrawableTop);
-            }
-            else if (mTargetRenderView != null)
-            {
+            } else if (mTargetRenderView != null) {
                 canvas.translate(mIconDrawableLeft, mIconDrawableTop);
                 mTargetRenderView.draw(canvas);
                 canvas.translate(-mIconDrawableLeft, -mIconDrawableTop);
@@ -802,32 +715,25 @@ public class MaterialTapTargetPrompt
         }
 
         @Override
-        public boolean onTouchEvent(MotionEvent event)
-        {
+        public boolean onTouchEvent(MotionEvent event) {
             final float x = event.getX();
             final float y = event.getY();
             //If the touch point is within the prompt background stop the event from passing through it
             boolean captureEvent = (!mClipToBounds || mClipBounds.contains((int) x, (int) y))
                     && mPromptOptions.getPromptBackground().contains(x, y);
             //If the touch event was at least in the background and in the focal
-            if (captureEvent && mPromptOptions.getPromptFocal().contains(x, y))
-            {
+            if (captureEvent && mPromptOptions.getPromptFocal().contains(x, y)) {
                 //Override allowing the touch event to pass through the view with the user defined value
                 captureEvent = mPromptOptions.getCaptureTouchEventOnFocal();
-                if (mPromptTouchedListener != null)
-                {
+                if (mPromptTouchedListener != null) {
                     mPromptTouchedListener.onFocalPressed();
                 }
-            }
-            else
-            {
+            } else {
                 // If the prompt background was not touched
-                if (!captureEvent)
-                {
+                if (!captureEvent) {
                     captureEvent = mPromptOptions.getCaptureTouchEventOutsidePrompt();
                 }
-                if (mPromptTouchedListener != null)
-                {
+                if (mPromptTouchedListener != null) {
                     mPromptTouchedListener.onNonFocalPressed();
                 }
             }
@@ -835,25 +741,18 @@ public class MaterialTapTargetPrompt
         }
 
         @Override
-        public boolean dispatchKeyEventPreIme(KeyEvent event)
-        {
+        public boolean dispatchKeyEventPreIme(KeyEvent event) {
             if (mPromptOptions.getBackButtonDismissEnabled()
-                    && event.getKeyCode() == KeyEvent.KEYCODE_BACK)
-            {
+                    && event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
                 KeyEvent.DispatcherState state = getKeyDispatcherState();
-                if (state != null)
-                {
+                if (state != null) {
                     if (event.getAction() == KeyEvent.ACTION_DOWN
-                            && event.getRepeatCount() == 0)
-                    {
+                            && event.getRepeatCount() == 0) {
                         state.startTracking(event, this);
                         return true;
-                    }
-                    else if (event.getAction() == KeyEvent.ACTION_UP
-                            && !event.isCanceled() && state.isTracking(event))
-                    {
-                        if (mPromptTouchedListener != null)
-                        {
+                    } else if (event.getAction() == KeyEvent.ACTION_UP
+                            && !event.isCanceled() && state.isTracking(event)) {
+                        if (mPromptTouchedListener != null) {
                             mPromptTouchedListener.onNonFocalPressed();
                         }
                         return mPromptOptions.getAutoDismiss()
@@ -866,8 +765,7 @@ public class MaterialTapTargetPrompt
         }
 
         @Override
-        protected void onDetachedFromWindow()
-        {
+        protected void onDetachedFromWindow() {
             super.onDetachedFromWindow();
             mPrompt.cleanUpAnimation();
         }
@@ -875,8 +773,7 @@ public class MaterialTapTargetPrompt
         /**
          * Interface definition for a callback to be invoked when a {@link PromptView} is touched.
          */
-        public interface PromptTouchedListener
-        {
+        public interface PromptTouchedListener {
             /**
              * Called when the focal is pressed.
              */
@@ -893,8 +790,7 @@ public class MaterialTapTargetPrompt
     /**
      * A builder to create a {@link MaterialTapTargetPrompt} instance.
      */
-    public static class Builder extends PromptOptions<Builder>
-    {
+    public static class Builder extends PromptOptions<Builder> {
         /**
          * Creates a builder for a tap target prompt that uses the default tap target prompt theme.
          *
@@ -902,8 +798,7 @@ public class MaterialTapTargetPrompt
          * @deprecated use support library fragments instead
          */
         @Deprecated
-        public Builder(@NonNull final android.app.Fragment fragment)
-        {
+        public Builder(@NonNull final android.app.Fragment fragment) {
             this(fragment.getActivity(), 0);
         }
 
@@ -920,8 +815,7 @@ public class MaterialTapTargetPrompt
          * @deprecated use support library fragments instead
          */
         @Deprecated
-        public Builder(@NonNull final android.app.Fragment fragment, int themeResId)
-        {
+        public Builder(@NonNull final android.app.Fragment fragment, int themeResId) {
             this(fragment.getActivity(), themeResId);
         }
 
@@ -932,8 +826,7 @@ public class MaterialTapTargetPrompt
          * @deprecated use support library fragments instead
          */
         @Deprecated
-        public Builder(@NonNull final android.app.DialogFragment dialogFragment)
-        {
+        public Builder(@NonNull final android.app.DialogFragment dialogFragment) {
             this(dialogFragment, 0);
         }
 
@@ -950,8 +843,7 @@ public class MaterialTapTargetPrompt
          * @deprecated use support library fragments instead
          */
         @Deprecated
-        public Builder(@NonNull final android.app.DialogFragment dialogFragment, int themeResId)
-        {
+        public Builder(@NonNull final android.app.DialogFragment dialogFragment, int themeResId) {
             this(dialogFragment.getDialog(), themeResId);
         }
 
@@ -961,8 +853,7 @@ public class MaterialTapTargetPrompt
          * @param fragment the fragment to show the prompt within.
          * @see #Builder(Fragment, int)
          */
-        public Builder(@NonNull final Fragment fragment)
-        {
+        public Builder(@NonNull final Fragment fragment) {
             this(fragment, 0);
         }
 
@@ -977,8 +868,7 @@ public class MaterialTapTargetPrompt
          *                   {@code 0} to use the parent {@code context}'s default material tap
          *                   target prompt theme
          */
-        public Builder(@NonNull final Fragment fragment, int themeResId)
-        {
+        public Builder(@NonNull final Fragment fragment, int themeResId) {
             this(fragment.requireActivity(), themeResId);
         }
 
@@ -988,8 +878,7 @@ public class MaterialTapTargetPrompt
          * @param dialogFragment the dialog fragment to show the prompt within.
          * @see #Builder(DialogFragment, int)
          */
-        public Builder(@NonNull final DialogFragment dialogFragment)
-        {
+        public Builder(@NonNull final DialogFragment dialogFragment) {
             this(dialogFragment, 0);
         }
 
@@ -1004,8 +893,7 @@ public class MaterialTapTargetPrompt
          *                       or {@code 0} to use the parent {@code context}'s default material
          *                       tap target prompt theme
          */
-        public Builder(@NonNull final DialogFragment dialogFragment, int themeResId)
-        {
+        public Builder(@NonNull final DialogFragment dialogFragment, int themeResId) {
             this(dialogFragment.getDialog(), themeResId);
         }
 
@@ -1014,8 +902,7 @@ public class MaterialTapTargetPrompt
          *
          * @param dialog the dialog to show the prompt within.
          */
-        public Builder(@NonNull final Dialog dialog)
-        {
+        public Builder(@NonNull final Dialog dialog) {
             this(dialog, 0);
         }
 
@@ -1030,8 +917,7 @@ public class MaterialTapTargetPrompt
          *                   {@code 0} to use the parent {@code context}'s default material tap
          *                   target prompt theme
          */
-        public Builder(@NonNull final Dialog dialog, int themeResId)
-        {
+        public Builder(@NonNull final Dialog dialog, int themeResId) {
             this(new DialogResourceFinder(dialog), themeResId);
         }
 
@@ -1040,8 +926,7 @@ public class MaterialTapTargetPrompt
          *
          * @param activity the activity to show the prompt within.
          */
-        public Builder(@NonNull final Activity activity)
-        {
+        public Builder(@NonNull final Activity activity) {
             this(activity, 0);
         }
 
@@ -1056,8 +941,7 @@ public class MaterialTapTargetPrompt
          *                   {@code 0} to use the parent {@code context}'s default material tap
          *                   target prompt theme
          */
-        public Builder(@NonNull final Activity activity, int themeResId)
-        {
+        public Builder(@NonNull final Activity activity, int themeResId) {
             this(new ActivityResourceFinder(activity), themeResId);
         }
 
@@ -1072,8 +956,7 @@ public class MaterialTapTargetPrompt
          *                       or {@code 0} to use the parent {@code context}'s default material
          *                       tap target prompt theme
          */
-        public Builder(@NonNull final ResourceFinder resourceFinder, int themeResId)
-        {
+        public Builder(@NonNull final ResourceFinder resourceFinder, int themeResId) {
             super(resourceFinder);
             load(themeResId);
         }
@@ -1082,8 +965,7 @@ public class MaterialTapTargetPrompt
     /**
      * Interface definition for a callback to be invoked when a prompts state changes.
      */
-    public interface PromptStateChangeListener
-    {
+    public interface PromptStateChangeListener {
         /**
          * Called when the prompts state changes.
          *
@@ -1095,30 +977,25 @@ public class MaterialTapTargetPrompt
         void onPromptStateChanged(@NonNull final MaterialTapTargetPrompt prompt, final int state);
     }
 
-    static class AnimatorListener implements Animator.AnimatorListener
-    {
+    static class AnimatorListener implements Animator.AnimatorListener {
 
         @Override
-        public void onAnimationStart(Animator animation)
-        {
+        public void onAnimationStart(Animator animation) {
 
         }
 
         @Override
-        public void onAnimationEnd(Animator animation)
-        {
+        public void onAnimationEnd(Animator animation) {
 
         }
 
         @Override
-        public void onAnimationCancel(Animator animation)
-        {
+        public void onAnimationCancel(Animator animation) {
 
         }
 
         @Override
-        public void onAnimationRepeat(Animator animation)
-        {
+        public void onAnimationRepeat(Animator animation) {
 
         }
     }

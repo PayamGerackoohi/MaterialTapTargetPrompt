@@ -25,45 +25,51 @@ import android.support.annotation.NonNull;
 import android.text.Layout;
 import android.text.TextPaint;
 
-public class PromptText implements PromptUIElement
-{
-    RectF mTextBounds = new RectF();
-    float mPrimaryTextLeft;
+import uk.co.samuelwall.materialtaptargetprompt.PromptTextDelegate;
+
+public class PromptText implements PromptUIElement {
+    private RectF mTextBounds = new RectF();
+    private float mPrimaryTextLeft;
     float mPrimaryTextLeftChange;
-    float mPrimaryTextTop;
-    float mSecondaryTextLeft;
+    private float mPrimaryTextTop;
+    private float mSecondaryTextLeft;
     float mSecondaryTextLeftChange;
-    float mSecondaryTextOffsetTop;
+    private float mSecondaryTextOffsetTop;
+    private float skipTextOffsetTop;
     Layout mPrimaryTextLayout;
     Layout mSecondaryTextLayout;
+    private PromptTextDelegate delegate;
+    private boolean viewDimReady = false;
 
     /**
      * The paint used to draw the primary text.
      */
-    TextPaint mPaintPrimaryText;
+    private TextPaint mPaintPrimaryText;
 
     /**
      * The paint used to draw the secondary text.
      */
-    TextPaint mPaintSecondaryText;
+    private TextPaint mPaintSecondaryText;
 
     /**
      * The primary text layout alignment.
      * Left, centre or right.
      */
-    Layout.Alignment mPrimaryTextAlignment;
+    private Layout.Alignment mPrimaryTextAlignment;
 
     /**
      * The secondary text layout alignment.
      * Left, centre or right.
      */
-    Layout.Alignment mSecondaryTextAlignment;
+    private Layout.Alignment mSecondaryTextAlignment;
 
-    boolean mClipToBounds;
+    private boolean mClipToBounds;
 
-    Rect mClipBounds;
+    private Rect mClipBounds;
 
-    public  PromptText() {}
+    public PromptText(PromptTextDelegate delegate) {
+        this.delegate = delegate;
+    }
 
     /**
      * Get the window position for the prompt text.
@@ -71,8 +77,7 @@ public class PromptText implements PromptUIElement
      * @return The prompt text bounds.
      */
     @NonNull
-    public RectF getBounds()
-    {
+    public RectF getBounds() {
         return mTextBounds;
     }
 
@@ -80,13 +85,11 @@ public class PromptText implements PromptUIElement
      * Recalculates the primary and secondary text positions.
      */
     public void prepare(@NonNull PromptOptions options,
-                        boolean clipToBounds, @NonNull Rect clipBounds)
-    {
+                        boolean clipToBounds, @NonNull Rect clipBounds) {
         mClipToBounds = clipToBounds;
         mClipBounds = clipBounds;
         final CharSequence primaryText = options.getPrimaryText();
-        if (primaryText != null)
-        {
+        if (primaryText != null) {
             mPaintPrimaryText = new TextPaint();
             @ColorInt final int primaryTextColour = options.getPrimaryTextColour();
             mPaintPrimaryText.setColor(primaryTextColour);
@@ -99,8 +102,7 @@ public class PromptText implements PromptUIElement
         }
 
         final CharSequence secondaryText = options.getSecondaryText();
-        if (secondaryText != null)
-        {
+        if (secondaryText != null) {
             mPaintSecondaryText = new TextPaint();
             @ColorInt final int secondaryTextColour = options.getSecondaryTextColour();
             mPaintSecondaryText.setColor(secondaryTextColour);
@@ -132,100 +134,82 @@ public class PromptText implements PromptUIElement
 
         if (PromptUtils.containsInset(clipBounds,
                 (int) (88 * options.getResourceFinder().getResources().getDisplayMetrics().density),
-                (int) focalCentreX, (int) focalCentreY))
-        {
+                (int) focalCentreX, (int) focalCentreY)) {
             mPrimaryTextLeft = clipBounds.left;
             final float width = Math.min(textWidth, maxWidth);
-            if (horizontalTextPositionLeft)
-            {
+            if (horizontalTextPositionLeft) {
                 mPrimaryTextLeft = focalCentreX - width + focalPadding;
-            }
-            else
-            {
+            } else {
                 mPrimaryTextLeft = focalCentreX - width - focalPadding;
             }
-            if (mPrimaryTextLeft < clipBounds.left + textPadding)
-            {
+            if (mPrimaryTextLeft < clipBounds.left + textPadding) {
                 mPrimaryTextLeft = clipBounds.left + textPadding;
             }
-            if (mPrimaryTextLeft + width > clipBounds.right - textPadding)
-            {
+            if (mPrimaryTextLeft + width > clipBounds.right - textPadding) {
                 mPrimaryTextLeft = clipBounds.right - textPadding - width;
             }
-        }
-        else
-        {
-            if (horizontalTextPositionLeft)
-            {
+        } else {
+            if (horizontalTextPositionLeft) {
                 mPrimaryTextLeft = (clipToBounds ? clipBounds.right :
                         options.getResourceFinder().getPromptParentView().getRight()) - textPadding - textWidth;
-            }
-            else
-            {
+            } else {
                 mPrimaryTextLeft = (clipToBounds ? clipBounds.left :
                         options.getResourceFinder().getPromptParentView().getLeft()) + textPadding;
             }
         }
 
-        if (verticalTextPositionAbove)
-        {
+        if (verticalTextPositionAbove) {
             mPrimaryTextTop = focalBounds.top - focalPadding;
-            if (mPrimaryTextLayout != null)
-            {
+            if (mPrimaryTextLayout != null) {
                 mPrimaryTextTop -= mPrimaryTextLayout.getHeight();
             }
-        }
-        else
-        {
+        } else {
             mPrimaryTextTop = focalBounds.bottom + focalPadding;
         }
 
         float primaryTextHeight = 0;
-        if (mPrimaryTextLayout != null)
-        {
+        if (mPrimaryTextLayout != null) {
             primaryTextHeight = mPrimaryTextLayout.getHeight();
         }
         float textHeight;
-        if (mSecondaryTextLayout != null)
-        {
+        if (mSecondaryTextLayout != null) {
             textHeight = mSecondaryTextLayout.getHeight();
-            if (verticalTextPositionAbove)
-            {
+            if (verticalTextPositionAbove) {
                 mPrimaryTextTop -= textHeight;
-                if (mPrimaryTextLayout != null)
-                {
+                if (mPrimaryTextLayout != null) {
                     mPrimaryTextTop -= options.getTextSeparation();
                 }
             }
 
-            if (mPrimaryTextLayout != null)
-            {
+            if (mPrimaryTextLayout != null) {
                 mSecondaryTextOffsetTop = primaryTextHeight + options.getTextSeparation();
             }
-            textHeight += mSecondaryTextOffsetTop;
         }
-        else
-        {
-            textHeight = primaryTextHeight;
+
+        if (delegate.hasSkip()) {
+            mPrimaryTextTop -= primaryTextHeight;
+            mPrimaryTextTop += options.getTextSeparation();
+            skipTextOffsetTop = primaryTextHeight + options.getTextSeparation();
+        } else {
+            skipTextOffsetTop = 0;
         }
 
         mSecondaryTextLeft = mPrimaryTextLeft;
         mPrimaryTextLeftChange = 0;
         mSecondaryTextLeftChange = 0;
         final float change = maxWidth - textWidth;
-        if (PromptUtils.isRtlText(mPrimaryTextLayout, options.getResourceFinder().getResources()))
-        {
+        if (PromptUtils.isRtlText(mPrimaryTextLayout, options.getResourceFinder().getResources())) {
             mPrimaryTextLeftChange = change;
         }
-        if (PromptUtils.isRtlText(mSecondaryTextLayout, options.getResourceFinder().getResources()))
-        {
+        if (PromptUtils.isRtlText(mSecondaryTextLayout, options.getResourceFinder().getResources())) {
             mSecondaryTextLeftChange = change;
         }
-        mTextBounds.left = mPrimaryTextLeft;// - change;
-        mTextBounds.top = mPrimaryTextTop;
+        mTextBounds.left = mPrimaryTextLeft;
+        mTextBounds.top = mPrimaryTextTop - options.getTextSeparation();
         mTextBounds.right = mTextBounds.left + textWidth;
-        mTextBounds.bottom = mTextBounds.top + textHeight;
-        //padding = (int) mTextPadding;
+        mTextBounds.bottom = mTextBounds.top + mSecondaryTextOffsetTop + skipTextOffsetTop + options.getTextSeparation();
+        viewDimReady = true;
+        delegate.onContentDimensionReady();
     }
 
     /**
@@ -234,32 +218,24 @@ public class PromptText implements PromptUIElement
      * @param maxWidth The maximum width that the text can be.
      */
     void createTextLayout(@NonNull final PromptOptions options, final float maxWidth,
-                          final float alphaModifier)
-    {
-        if (options.getPrimaryText() != null)
-        {
+                          final float alphaModifier) {
+        if (options.getPrimaryText() != null) {
             mPrimaryTextLayout = PromptUtils.createStaticTextLayout(options.getPrimaryText(),
                     mPaintPrimaryText, (int) maxWidth, mPrimaryTextAlignment, alphaModifier);
-        }
-        else
-        {
+        } else {
             mPrimaryTextLayout = null;
         }
-        if (options.getSecondaryText() != null)
-        {
+        if (options.getSecondaryText() != null) {
             mSecondaryTextLayout = PromptUtils.createStaticTextLayout(options.getSecondaryText(),
                     mPaintSecondaryText, (int) maxWidth, mSecondaryTextAlignment, alphaModifier);
-        }
-        else
-        {
+        } else {
             mSecondaryTextLayout = null;
         }
     }
 
     @Override
     public void update(@NonNull final PromptOptions options, float revealModifier,
-                       float alphaModifier)
-    {
+                       float alphaModifier) {
         final float maxWidth = PromptUtils.calculateMaxWidth(options.getMaxTextWidth(),
                 mClipToBounds ? mClipBounds : null,
                 options.getResourceFinder().getPromptParentView().getWidth(),
@@ -268,15 +244,12 @@ public class PromptText implements PromptUIElement
     }
 
     @Override
-    public void draw(@NonNull Canvas canvas)
-    {
+    public void draw(@NonNull Canvas canvas) {
         canvas.translate(mPrimaryTextLeft - mPrimaryTextLeftChange, mPrimaryTextTop);
-        if (mPrimaryTextLayout != null)
-        {
+        if (mPrimaryTextLayout != null) {
             mPrimaryTextLayout.draw(canvas);
         }
-        if (mSecondaryTextLayout != null)
-        {
+        if (mSecondaryTextLayout != null) {
             canvas.translate(-(mPrimaryTextLeft - mPrimaryTextLeftChange)
                     + mSecondaryTextLeft - mSecondaryTextLeftChange, mSecondaryTextOffsetTop);
             mSecondaryTextLayout.draw(canvas);
@@ -284,8 +257,16 @@ public class PromptText implements PromptUIElement
     }
 
     @Override
-    public boolean contains(float x, float y)
-    {
+    public boolean contains(float x, float y) {
         return mTextBounds.contains(x, y);
+    }
+
+    public boolean isViewDimReady() {
+        return viewDimReady;
+    }
+
+    //  {dx, dy}
+    public float[] getSkipOffsets() {
+        return new float[]{mPrimaryTextLeft - mPrimaryTextLeftChange, mPrimaryTextTop + mSecondaryTextOffsetTop + skipTextOffsetTop};
     }
 }
